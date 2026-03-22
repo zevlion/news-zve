@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>News ZVE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        -webkit-tap-highlight-color: transparent;
+        font-feature-settings: "cv11", "ss01";
+      }
+
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #000;
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #fff;
+      }
+
+      .modal-active {
+        transform: translateY(0) !important;
+      }
+
+      #article-modal {
+        transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        transform: translateY(100%);
+      }
+
+      #custom-context-menu {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+      }
+
+      .line-clamp-2 {
+        display: -webkit-box;
+        -line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .line-clamp-3 {
+        display: -webkit-box;
+        -line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-white text-black dark:bg-black dark:text-white min-h-screen font-sans transition-colors duration-300"
+  >
+    <div
+      id="custom-context-menu"
+      class="w-56 bg-white dark:bg-black border border-black dark:border-white rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] overflow-hidden py-1"
+    >
+      <button
+        onclick="copyCurrentUrl()"
+        class="w-full text-left px-4 py-3 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black flex items-center gap-3 transition-colors"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+        </svg>
+        <span class="text-xs font-bold uppercase tracking-widest"
+          >Copy Link</span
+        >
+      </button>
+      <button
+        onclick="shareArticle()"
+        class="w-full text-left px-4 py-3 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black flex items-center gap-3 transition-colors"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="18" cy="5" r="3" />
+          <circle cx="6" cy="12" r="3" />
+          <circle cx="18" cy="19" r="3" />
+          <line x1="8.59" x2="15.42" y1="13.51" y2="17.49" />
+          <line x1="15.41" x2="8.59" y1="6.51" y2="10.49" />
+        </svg>
+        <span class="text-xs font-bold uppercase tracking-widest"
+          >Share Story</span
+        >
+      </button>
+    </div>
+
+    <nav
+      class="border-b border-black dark:border-white sticky top-0 bg-white/90 dark:bg-black/90 backdrop-blur-md z-40 px-6"
+    >
+      <div class="max-w-6xl mx-auto h-20 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 bg-black dark:bg-white flex items-center justify-center font-black text-white dark:text-black text-xl"
+          >
+            Z
+          </div>
+          <h1 class="text-2xl font-black tracking-tighter uppercase italic">
+            News ZVE
+          </h1>
+        </div>
+        <div id="status-dot" class="flex items-center gap-2">
+          <span class="text-[10px] font-bold uppercase tracking-[0.2em]"
+            >Live</span
+          >
+          <div
+            class="w-2 h-2 rounded-full bg-black dark:bg-white animate-pulse"
+          ></div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-6 py-12">
+      <div
+        id="news-container"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12"
+      >
+        <div class="space-y-6">
+          <div
+            class="bg-gray-100 dark:bg-neutral-900 aspect-[4/3] w-full animate-pulse"
+          ></div>
+          <div
+            class="h-8 bg-gray-100 dark:bg-neutral-900 w-full animate-pulse"
+          ></div>
+          <div
+            class="h-4 bg-gray-100 dark:bg-neutral-900 w-2/3 animate-pulse"
+          ></div>
+        </div>
+        <div class="space-y-6 hidden md:block">
+          <div
+            class="bg-gray-100 dark:bg-neutral-900 aspect-[4/3] w-full animate-pulse"
+          ></div>
+          <div
+            class="h-8 bg-gray-100 dark:bg-neutral-900 w-full animate-pulse"
+          ></div>
+          <div
+            class="h-4 bg-gray-100 dark:bg-neutral-900 w-2/3 animate-pulse"
+          ></div>
+        </div>
+        <div class="space-y-6 hidden lg:block">
+          <div
+            class="bg-gray-100 dark:bg-neutral-900 aspect-[4/3] w-full animate-pulse"
+          ></div>
+          <div
+            class="h-8 bg-gray-100 dark:bg-neutral-900 w-full animate-pulse"
+          ></div>
+          <div
+            class="h-4 bg-gray-100 dark:bg-neutral-900 w-2/3 animate-pulse"
+          ></div>
+        </div>
+      </div>
+    </main>
+
+    <div
+      id="article-modal"
+      class="fixed inset-0 z-50 bg-white dark:bg-black overflow-y-auto"
+    >
+      <div
+        class="sticky top-0 p-6 flex justify-between items-center bg-white dark:bg-black z-10 border-b border-black dark:border-white"
+      >
+        <button
+          onclick="closeModal()"
+          class="flex items-center gap-2 font-bold uppercase tracking-widest text-xs hover:line-through"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+          Back
+        </button>
+        <div class="flex gap-4">
+          <button
+            onclick="shareArticle()"
+            class="text-xs font-bold uppercase tracking-widest hover:line-through"
+          >
+            Share
+          </button>
+        </div>
+      </div>
+
+      <article id="modal-content" class="max-w-3xl mx-auto px-6 py-16">
+        <div
+          id="modal-loading"
+          class="flex flex-col items-center justify-center py-20"
+        >
+          <div
+            class="w-8 h-8 border-2 border-black dark:border-white border-t-transparent animate-spin mb-4"
+          ></div>
+          <p class="text-[10px] font-bold uppercase tracking-[0.3em]">
+            Decoding...
+          </p>
+        </div>
+
+        <div id="modal-body" class="hidden">
+          <header class="mb-12">
+            <div
+              id="modal-source"
+              class="font-black text-xs uppercase tracking-[0.4em] mb-6 inline-block border-b-2 border-black dark:border-white pb-1"
+            ></div>
+            <h1
+              id="modal-title"
+              class="text-4xl md:text-6xl font-black leading-none mb-8 tracking-tighter"
+            ></h1>
+            <div
+              class="flex flex-col gap-2 uppercase tracking-widest text-[10px] font-bold opacity-60"
+            >
+              <span id="modal-authors"></span>
+              <span id="modal-date"></span>
+            </div>
+          </header>
+
+          <div
+            class="mb-12 overflow-hidden grayscale border border-black dark:border-white"
+          >
+            <img
+              id="modal-image"
+              src=""
+              alt=""
+              class="w-full aspect-video object-cover"
+            />
+          </div>
+
+          <div
+            id="modal-text"
+            class="text-lg md:text-xl leading-relaxed font-medium whitespace-pre-line space-y-8"
+          ></div>
+        </div>
+      </article>
+    </div>
+
+    <script>
+      let currentArticles = [];
+      let activeArticleUrl = null;
+      let contextTargetUrl = null;
+
+      const menu = document.getElementById("custom-context-menu");
+      const modal = document.getElementById("article-modal");
+      const container = document.getElementById("news-container");
+
+      async function fetchNews() {
+        try {
+          const response = await fetch("/api/v1/news?limit=12");
+          currentArticles = await response.json();
+
+          if (currentArticles.error) throw new Error(currentArticles.error);
+
+          container.innerHTML = currentArticles
+            .map(
+              (article, idx) => `
+                    <div 
+                        onclick="openArticle('${article.url}', ${idx})" 
+                        oncontextmenu="handleArticleContext(event, '${article.url}')"
+                        class="group cursor-pointer border-b border-black dark:border-white pb-10 last:border-0"
+                    >
+                        <div class="relative overflow-hidden aspect-[4/3] mb-6 bg-gray-100 dark:bg-neutral-900 border border-black dark:border-white grayscale group-hover:grayscale-0 transition-all duration-500">
+                            <img src="${article.thumbnail}" alt="" 
+                                class="w-full h-full object-cover" 
+                                onerror="this.src='https://images.unsplash.com/photo-1585007600263-ad126256751c?q=80&w=800&auto=format&fit=crop'">
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-[0.3em] mb-3 block">${article.source}</span>
+                            <h2 class="text-2xl font-black leading-none tracking-tighter uppercase mb-4 group-hover:italic transition-all">
+                                ${article.title}
+                            </h2>
+                            <p class="text-sm font-medium leading-relaxed opacity-60 line-clamp-3">${article.summary}</p>
+                        </div>
+                    </div>
+                `,
+            )
+            .join("");
+        } catch (err) {
+          container.innerHTML = `<div class="col-span-full border-2 border-black dark:border-white p-12 text-center text-xs font-bold uppercase tracking-widest">System Offline: ${err.message}</div>`;
+        }
+      }
+
+      async function openArticle(url, index) {
+        activeArticleUrl = url;
+        const articleBrief = currentArticles[index];
+
+        document.getElementById("modal-title").innerText = articleBrief.title;
+        document.getElementById("modal-source").innerText = articleBrief.source;
+        document.getElementById("modal-image").src = articleBrief.thumbnail;
+
+        document.getElementById("modal-loading").classList.remove("hidden");
+        document.getElementById("modal-body").classList.add("hidden");
+        document.body.style.overflow = "hidden";
+        modal.classList.add("modal-active");
+
+        try {
+          const response = await fetch(
+            `/api/v1/article?url=${encodeURIComponent(url)}`,
+          );
+          const details = await response.json();
+
+          if (details.error) throw new Error(details.error);
+
+          document.getElementById("modal-title").innerText =
+            details.title || articleBrief.title;
+          document.getElementById("modal-authors").innerText =
+            details.authors && details.authors.length
+              ? `By ${details.authors.join(", ")}`
+              : "Staff Writer";
+          document.getElementById("modal-date").innerText =
+            details.date || "Live Update";
+          document.getElementById("modal-text").innerText = details.content;
+
+          document.getElementById("modal-loading").classList.add("hidden");
+          document.getElementById("modal-body").classList.remove("hidden");
+        } catch (err) {
+          document.getElementById("modal-text").innerHTML =
+            `<div class="p-12 border border-black dark:border-white text-center"><p class="text-xs font-black uppercase tracking-widest">Transmission Error</p></div>`;
+          document.getElementById("modal-loading").classList.add("hidden");
+          document.getElementById("modal-body").classList.remove("hidden");
+        }
+      }
+
+      function closeModal() {
+        modal.classList.remove("modal-active");
+        document.body.style.overflow = "";
+        activeArticleUrl = null;
+      }
+
+      function handleArticleContext(e, url) {
+        e.preventDefault();
+        e.stopPropagation();
+        contextTargetUrl = url;
+        menu.style.display = "block";
+        menu.style.left = `${e.clientX}px`;
+        menu.style.top = `${e.clientY}px`;
+      }
+
+      window.addEventListener("contextmenu", (e) => {
+        if (!e.target.closest("[oncontextmenu]")) {
+          e.preventDefault();
+          menu.style.display = "none";
+        }
+      });
+
+      window.addEventListener("click", () => {
+        menu.style.display = "none";
+      });
+
+      function copyCurrentUrl() {
+        const urlToCopy =
+          contextTargetUrl || activeArticleUrl || window.location.href;
+        const el = document.createElement("textarea");
+        el.value = urlToCopy;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+        contextTargetUrl = null;
+      }
+
+      function shareArticle() {
+        const url =
+          contextTargetUrl || activeArticleUrl || window.location.href;
+        if (navigator.share) {
+          navigator.share({ title: "News ZVE", url: url });
+        } else {
+          copyCurrentUrl();
+        }
+        contextTargetUrl = null;
+      }
+
+      fetchNews();
+    </script>
+  </body>
+</html>
